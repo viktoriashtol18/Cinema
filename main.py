@@ -1,6 +1,5 @@
 import random
-
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
@@ -9,15 +8,18 @@ from flask_jwt_extended import (
 from functools import wraps
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cinema.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+app.secret_key = 'super-secret-key-for-flask'
 
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
+
 
 # MODELS
 class User(db.Model):
@@ -55,6 +57,8 @@ class Ticket(db.Model):
     user = db.relationship('User')
     session = db.relationship('Session')
 
+
+
 # HELPERS
 def role_required(roles):
     def wrapper(fn):
@@ -67,6 +71,48 @@ def role_required(roles):
             return fn(*args, **kwargs)
         return decorator
     return wrapper
+
+
+# FRONTEND ROUTES
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/sessions')
+def sessions():
+    sessions = Session.query.all()
+    return render_template('sessions.html', sessions=sessions)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login_page():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()
+
+        if user and user.check_password(password):
+            access_token = create_access_token(
+                identity=user.username,
+                additional_claims={'role': user.role, 'user_id': user.id}
+            )
+            response = redirect(url_for('index'))
+            response.set_cookie('access_token', access_token)
+            flash('Logged in successfully!', 'success')
+            return response
+        else:
+            flash('Invalid username or password', 'danger')
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    response = redirect(url_for('index'))
+    response.set_cookie('access_token', '', expires=0)
+    flash('Logged out successfully!', 'success')
+    return response
 
 # AUTH
 @app.route('/api/auth/login', methods=['POST'])
