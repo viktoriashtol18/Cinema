@@ -19,7 +19,7 @@
 <div class="featured-movies">
     <h2 class="mb-4">Now Showing</h2>
     <div class="row">
-        {% for session in Session.query.limit(3).all() %}
+        {% for session in sessions %}
         <div class="col-md-4 mb-4">
             <div class="card h-100">
                 <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="{{ session.movie_title }}">

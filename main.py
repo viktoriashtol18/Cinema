@@ -76,7 +76,8 @@ def role_required(roles):
 # FRONTEND ROUTES
 @app.route('/')
 def index():
-    return render_template('index.html')
+    sessions = Session.query.limit(3).all()  # Get 3 sessions from database
+    return render_template('index.html', sessions=sessions)  # Pass sessions to template
 
 
 @app.route('/sessions')
