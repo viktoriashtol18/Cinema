@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="hero-section bg-light p-5 rounded-lg mb-5">
+    <div class="row">
+        <div class="col-md-6">
+            <h1 class="display-4">Welcome to Cinema App</h1>
+            <p class="lead">Book tickets for the latest movies in our comfortable halls.</p>
+            <a href="{{ url_for('sessions') }}" class="btn btn-primary btn-lg">View Sessions</a>
+        </div>
+        <div class="col-md-6">
+            <img src="https://via.placeholder.com/600x400" alt="Cinema" class="img-fluid rounded">
+        </div>
+    </div>
+</div>
+
+<div class="featured-movies">
+    <h2 class="mb-4">Now Showing</h2>
+    <div class="row">
+        {% for session in Session.query.limit(3).all() %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="{{ session.movie_title }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ session.movie_title }}</h5>
+                    <p class="card-text">
+                        <strong>Hall:</strong> {{ session.hall }}<br>
+                        <strong>Time:</strong> {{ session.start_time.strftime('%Y-%m-%d %H:%M') }}<br>
+                        <strong>Seats:</strong> {{ session.available_seats }}/{{ session.total_seats }}
+                    </p>
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="{{ url_for('sessions') }}" class="btn btn-sm btn-outline-primary">Book Now</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
